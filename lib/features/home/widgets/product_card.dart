@@ -79,6 +79,7 @@ class ProductCard extends StatelessWidget {
               flex: 2,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
+                
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
