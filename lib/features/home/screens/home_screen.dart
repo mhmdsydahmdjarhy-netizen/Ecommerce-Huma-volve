@@ -1,19 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // ✅ جديد
 
 import '../../../core/dummy_data.dart';
 import '../../../core/theme.dart';
+import '../data/services/home_service.dart'; // ✅ جديد
+import '../logic/home_cubit.dart'; // ✅ جديد
+import '../logic/home_state.dart'; // ✅ جديد
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 
-class HomeScreen extends StatefulWidget {
+// ✅ اتغيّرت: بقت بتوفّر الـ Cubit وتحمّل البيانات أول ما تفتح
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => HomeCubit(HomeService())..loadHome(),
+      child: const _HomeView(),
+    );
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedCategoryIndex = 0;
+class _HomeView extends StatelessWidget {
+  const _HomeView();
 
   @override
   Widget build(BuildContext context) {
@@ -108,43 +118,96 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: dummyCategories.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          return CategoryChip(
-                            label: dummyCategories[index],
-                            isSelected: _selectedCategoryIndex == index,
-                            onTap: () {
-                              setState(() {
-                                _selectedCategoryIndex = index;
-                              });
+                    // ✅ اتغيّر: الـ chips بتيجي من الـ API عن طريق الـ Cubit
+                    BlocBuilder<HomeCubit, HomeState>(
+                      buildWhen: (prev, curr) =>
+                          prev.categories != curr.categories ||
+                          prev.selectedIndex != curr.selectedIndex,
+                      builder: (context, state) {
+                        final labels = [
+                          'All',
+                          ...state.categories.map((c) => c.name),
+                        ];
+                        return SizedBox(
+                          height: 44,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: labels.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              return CategoryChip(
+                                label: labels[index],
+                                isSelected: state.selectedIndex == index,
+                                onTap: () => context
+                                    .read<HomeCubit>()
+                                    .selectCategory(index),
+                              );
                             },
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
             ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.7,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return ProductCard(product: dummyProducts[index]);
-                }, childCount: dummyProducts.length),
-              ),
+            // ✅ اتغيّر: المنتجات بتتعرض حسب حالة الـ Cubit
+            BlocBuilder<HomeCubit, HomeState>(
+              builder: (context, state) {
+                if (state.status == HomeStatus.loading) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  );
+                }
+                if (state.status == HomeStatus.failure) {
+                  return SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Text(
+                            state.errorMessage ?? 'Something went wrong',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: () =>
+                                context.read<HomeCubit>().loadHome(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                if (state.products.isEmpty) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 60),
+                      child: Center(child: Text('No products found')),
+                    ),
+                  );
+                }
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.7,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return ProductCard(product: state.products[index]);
+                    }, childCount: state.products.length),
+                  ),
+                );
+              },
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],

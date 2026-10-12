@@ -6,7 +6,7 @@ import '../../../../core/theme.dart';
 import '../../../main_navigation/screens/main_navigation_screen.dart';
 import '../../sign_up/screens/sign_up_screen.dart';
 import '../../data/services/auth_service.dart'; //  جديد
-
+ 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
