@@ -10,10 +10,18 @@ class HomeRemoteDataSource {
     return data.map((e) => CategoryModel.fromJson(e)).toList();
   }
 
-  Future<List<ProductModel>> getProducts({int? categoryId}) async {
+  Future<List<ProductModel>> getProducts({
+    int? categoryId,
+    required int offset,
+    required int limit,
+  }) async {
     final url = categoryId == null
-        ? ApiConstants.products
-        : ApiConstants.productsByCategory(categoryId);
+        ? ApiConstants.products(offset: offset, limit: limit)
+        : ApiConstants.productsByCategory(
+            categoryId,
+            offset: offset,
+            limit: limit,
+          );
     final data = await _get(url);
     return data.map((e) => ProductModel.fromJson(e)).toList();
   }

@@ -12,7 +12,15 @@ class HomeRepositoryImpl implements HomeRepository {
   Future<List<CategoryEntity>> getCategories() => _remote.getCategories();
 
   @override
-  Future<List<ProductEntity>> getProducts({int? categoryId}) {
-    return _remote.getProducts(categoryId: categoryId);
+  Future<List<ProductEntity>> getProducts({
+    int? categoryId,
+    required int offset,
+    required int limit,
+  }) {
+    return _remote.getProducts(
+      categoryId: categoryId,
+      offset: offset,
+      limit: limit,
+    );
   }
 }

@@ -24,8 +24,36 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _HomeView extends StatelessWidget {
+// بقت StatefulWidget عشان محتاجين ScrollController يراقب السكرول
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  // لما نقرّب من آخر القايمة (300 بكسل) نطلب الصفحة اللي بعدها
+  void _onScroll() {
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 300) {
+      context.read<HomeCubit>().loadMore();
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +61,7 @@ class _HomeView extends StatelessWidget {
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -72,14 +101,16 @@ class _HomeView extends StatelessWidget {
                     const SizedBox(height: 32),
                     Text(
                       'Explore',
-                      style: Theme.of(context).textTheme.displayLarge
-                          ?.copyWith(fontSize: 36),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.displayLarge?.copyWith(fontSize: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Best trendy collection!',
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(fontSize: 18),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 18),
                     ),
                     const SizedBox(height: 32),
                     Container(
@@ -120,7 +151,6 @@ class _HomeView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // ✅ اتغيّر: الـ chips بتيجي من الـ API عن طريق الـ Cubit
                     BlocBuilder<HomeCubit, HomeState>(
                       buildWhen: (prev, curr) =>
                           prev.categories != curr.categories ||
@@ -154,7 +184,6 @@ class _HomeView extends StatelessWidget {
                 ),
               ),
             ),
-            // ✅ اتغيّر: المنتجات بتتعرض حسب حالة الـ Cubit
             BlocBuilder<HomeCubit, HomeState>(
               builder: (context, state) {
                 if (state.status == HomeStatus.loading) {
@@ -207,6 +236,22 @@ class _HomeView extends StatelessWidget {
                     delegate: SliverChildBuilderDelegate((context, index) {
                       return ProductCard(product: state.products[index]);
                     }, childCount: state.products.length),
+                  ),
+                );
+              },
+            ),
+            // دايرة التحميل اللي بتظهر آخر القايمة وإحنا بنجيب صفحة جديدة
+            BlocBuilder<HomeCubit, HomeState>(
+              buildWhen: (prev, curr) =>
+                  prev.isLoadingMore != curr.isLoadingMore,
+              builder: (context, state) {
+                if (!state.isLoadingMore) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
                 );
               },

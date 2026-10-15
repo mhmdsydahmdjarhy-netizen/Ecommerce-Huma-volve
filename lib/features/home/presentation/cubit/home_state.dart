@@ -9,6 +9,8 @@ class HomeState {
   final List<Product> products;
   final int selectedIndex; // 0 = All
   final String? errorMessage;
+  final bool isLoadingMore; // بيجيب الصفحة اللي بعدها دلوقتي
+  final bool hasReachedEnd; // مفيش منتجات تانية
 
   const HomeState({
     this.status = HomeStatus.loading,
@@ -16,6 +18,8 @@ class HomeState {
     this.products = const [],
     this.selectedIndex = 0,
     this.errorMessage,
+    this.isLoadingMore = false,
+    this.hasReachedEnd = false,
   });
 
   HomeState copyWith({
@@ -24,6 +28,8 @@ class HomeState {
     List<Product>? products,
     int? selectedIndex,
     String? errorMessage,
+    bool? isLoadingMore,
+    bool? hasReachedEnd,
   }) {
     return HomeState(
       status: status ?? this.status,
@@ -31,6 +37,8 @@ class HomeState {
       products: products ?? this.products,
       selectedIndex: selectedIndex ?? this.selectedIndex,
       errorMessage: errorMessage,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedEnd: hasReachedEnd ?? this.hasReachedEnd,
     );
   }
 }
