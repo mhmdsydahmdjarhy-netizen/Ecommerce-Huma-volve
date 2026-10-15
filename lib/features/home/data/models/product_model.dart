@@ -1,19 +1,12 @@
-import 'package:flutter/material.dart';
-import '../../../../core/dummy_data.dart';
+import '../../domain/entities/product_entity.dart';
 
-class ProductModel {
-  final int id;
-  final String title;
-  final double price;
-  final String description;
-  final List<String> images;
-
-  ProductModel({
-    required this.id,
-    required this.title,
-    required this.price,
-    required this.description,
-    required this.images,
+class ProductModel extends ProductEntity {
+  const ProductModel({
+    required super.id,
+    required super.title,
+    required super.price,
+    required super.description,
+    required super.images,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -26,28 +19,11 @@ class ProductModel {
     );
   }
 
-  // الـ API أحياناً بيرجع روابط الصور بأقواس أو علامات تنصيص زيادة
   static List<String> _cleanImages(dynamic raw) {
     if (raw is! List) return [];
     return raw
         .map((e) => e.toString().replaceAll(RegExp(r'[\[\]"]'), '').trim())
         .where((e) => e.startsWith('http'))
         .toList();
-  }
-
-  // بيحوّل موديل الـ API للكلاس اللي الـ UI متعود عليه
-  Product toProduct() {
-    return Product(
-      id: id.toString(),
-      name: title,
-      description: description,
-      price: price,
-      imageUrl: images.isNotEmpty
-          ? images.first
-          : 'https://picsum.photos/seed/$id/300/300',
-      // الـ API مفيهوش ألوان ولا مقاسات، فبنحط قيم افتراضية
-      colors: const [Colors.black, Colors.white, Colors.grey],
-      sizes: const ['S', 'M', 'L', 'XL'],
-    );
   }
 }
