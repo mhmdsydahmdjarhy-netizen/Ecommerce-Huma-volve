@@ -16,4 +16,6 @@ class ApiConstants {
     required int limit,
   }) =>
       '$baseUrl/categories/$id/products?offset=$offset&limit=$limit';
+
+  static String productById(int id) => '$baseUrl/products/$id';
 }

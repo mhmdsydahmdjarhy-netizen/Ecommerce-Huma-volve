@@ -23,4 +23,7 @@ class HomeRepositoryImpl implements HomeRepository {
       limit: limit,
     );
   }
+
+  @override
+  Future<ProductEntity> getProductById(int id) => _remote.getProductById(id);
 }

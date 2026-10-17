@@ -8,4 +8,5 @@ abstract class HomeRepository {
     required int offset,
     required int limit,
   });
+  Future<ProductEntity> getProductById(int id);
 }

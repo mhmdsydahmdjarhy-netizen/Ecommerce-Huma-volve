@@ -6,7 +6,7 @@ import '../models/product_model.dart';
 
 class HomeRemoteDataSource {
   Future<List<CategoryModel>> getCategories() async {
-    final data = await _get(ApiConstants.categories);
+    final data = await _get(ApiConstants.categories) as List<dynamic>;
     return data.map((e) => CategoryModel.fromJson(e)).toList();
   }
 
@@ -22,15 +22,21 @@ class HomeRemoteDataSource {
             offset: offset,
             limit: limit,
           );
-    final data = await _get(url);
+    final data = await _get(url) as List<dynamic>;
     return data.map((e) => ProductModel.fromJson(e)).toList();
   }
 
-  Future<List<dynamic>> _get(String url) async {
+  // منتج واحد بالـ id (بيستخدمه الـ deep link)
+  Future<ProductModel> getProductById(int id) async {
+    final data = await _get(ApiConstants.productById(id));
+    return ProductModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<dynamic> _get(String url) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        return jsonDecode(response.body) as List<dynamic>;
+        return jsonDecode(response.body);
       }
       throw Exception('Failed to load data (${response.statusCode})');
     } on http.ClientException {
